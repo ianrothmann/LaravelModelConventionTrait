@@ -1,0 +1,13 @@
+{
+    "name": "ianrothmann/laravel-model-convention",
+    "description": "A Model Trait to override standard laravel 5 model conventions for use with larger scale databases",
+    "type": "library",
+    "license": "Apache2",
+    "authors": [
+        {
+            "name": "Ian Rothmann",
+            "email": "ian@conceptsphere.com"
+        }
+    ],
+    "require": {}
+}
