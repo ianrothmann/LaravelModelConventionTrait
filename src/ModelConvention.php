@@ -164,7 +164,7 @@ trait ModelConvention
         return parent::hasManyThrough($related, $through, $firstKey, $secondKey, $localKey);
     }
 
-    function allWithHas($relationship_name,$addQuery=null,$pivotCols=[]){
+    function allWithHas($relationship_name,$addQuery=null,$pivotCols=[],$withTrashed=false){
         if(is_a($this->$relationship_name(),'Illuminate\Database\Eloquent\Relations\BelongsToMany')){
 
             $props=$this->accessProtected($this->$relationship_name(),['table','foreignKey','relatedKey','query']);
@@ -194,12 +194,17 @@ trait ModelConvention
             }
 
 
-
             $query->select(DB::raw('`'.$props_t['table'].'`.*,'.$pivots.' `'.$this->table.'`.`'.$this->primaryKey.'` is not null as `has`'));
             //
             if(is_callable($addQuery)){
                 $addQuery($query);
             }
+
+            if (!$withTrashed&&in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($model))){
+                $query->whereNull($model->table.'.deleted_at');
+
+            }
+
 
             return $model::hydrate($query->get()->toArray());
 
@@ -208,7 +213,6 @@ trait ModelConvention
         }
 
     }
-
 
     function scopeAutojoin($query,$relationship_name,$join=''){
         if($join=='')
