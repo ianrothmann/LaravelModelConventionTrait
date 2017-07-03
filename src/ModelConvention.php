@@ -81,7 +81,6 @@ trait ModelConvention
 
     public function hasMany($related, $foreignKey = null, $localKey = null)
     {
-
         $related=$this->parseRelated($related);
 
         if($foreignKey==null)
@@ -97,13 +96,11 @@ trait ModelConvention
     {
         $related=$this->parseRelated($related);
 
-        if($foreignKey==null||$localKey==null){
-            $key=$this->primaryKey($related);
-            if($foreignKey==null)
-                $foreignKey=$key;
-            if($localKey==null)
-                $localKey=$key;
-        }
+        if($foreignKey==null)
+            $foreignKey=$this->primaryKey;
+
+        if($localKey==null)
+            $localKey=$this->primaryKey;
 
         return parent::hasOne($related, $foreignKey, $localKey);
     }
@@ -214,7 +211,7 @@ trait ModelConvention
 
     }
 
-    function scopeAutojoin($query,$relationship_name,$join=''){
+    function scopeJoinRelation($query,$relationship_name,$join=''){
         if($join=='')
             $join='join';
         elseif ($join=='left')
@@ -223,39 +220,53 @@ trait ModelConvention
             $join='rightJoin';
 
         if(is_a($this->$relationship_name(),'Illuminate\Database\Eloquent\Relations\BelongsToMany')){
+            $reflect=$this->accessProtected($this->$relationship_name(),['table','foreignKey','relatedKey','related','parent']);
+            $reflect_related=$this->accessProtected($reflect['related'],['table']);
+            $reflect_this=$this->accessProtected($reflect['parent'],['table']);
 
+            $pivotTable=$reflect['table'];
+            $relatedTable=$reflect_related['table'];
+            $relatedKey=$reflect['relatedKey'];
+            $thisTable=$reflect_this['table'];
+            $foreignKey=$reflect['foreignKey'];
 
-            $props=$this->accessProtected($this->$relationship_name(),['table','foreignKey','relatedKey','query']);
-            $props_q=$this->accessProtected($props['query'],['model']);
-            $props_t=$this->accessProtected($props_q['model'],['table','primaryKey']);
+            return $query->$join($pivotTable,$thisTable.'.'.$foreignKey,'=',$pivotTable.'.'.$foreignKey)
+                         ->$join($relatedTable,$relatedTable.'.'.$relatedKey,'=',$pivotTable.'.'.$relatedKey);
 
-            return $query->$join($props['table'],$this->table.'.'.$props['foreignKey'],'=',$props['table'].'.'.$props['foreignKey'])
-                ->$join($props_t['table'],$props_t['table'].'.'.$props_t['primaryKey'],'=',$props['table'].'.'.$props['relatedKey']);
         }elseif(is_a($this->$relationship_name(),'Illuminate\Database\Eloquent\Relations\HasMany')){
-
             $alias=strtolower($relationship_name);
-            $props=$this->accessProtected($this->$relationship_name(),['localKey','foreignKey','query']);
-            $props_q=$this->accessProtected($props['query'],['model']);
-            $props_t=$this->accessProtected($props_q['model'],['table','primaryKey']);
+            $reflect=$this->accessProtected($this->$relationship_name(),['localKey','foreignKey','parent','related']);
+            $reflect_related=$this->accessProtected($reflect['related'],['table']);
+            $relatedKey=$alias.strstr($reflect['foreignKey'],'.');
 
-            return $query->$join($props_t['table'].' as '.$alias,$alias.'.'.$props['foreignKey'],'=',$this->table.'.'.$props['localKey']);
+            return $query->$join($reflect_related['table'].' as '.$alias,$this->table.'.'.$reflect['localKey'],'=',$relatedKey);
+
+        }elseif(is_a($this->$relationship_name(),'Illuminate\Database\Eloquent\Relations\HasOne')){
+            $alias=strtolower($relationship_name);
+            $reflect=$this->accessProtected($this->$relationship_name(),['localKey','foreignKey','parent','related']);
+            $reflect_related=$this->accessProtected($reflect['related'],['table']);
+            $relatedKey=$alias.strstr($reflect['foreignKey'],'.');
+
+            return $query->$join($reflect_related['table'].' as '.$alias,$this->table.'.'.$reflect['localKey'],'=',$relatedKey);
+
         }elseif(is_a($this->$relationship_name(),'Illuminate\Database\Eloquent\Relations\BelongsTo')){
-
             $alias=strtolower($relationship_name);
-            $props=$this->accessProtected($this->$relationship_name(),['foreignKey','query']);
-            $props_q=$this->accessProtected($props['query'],['model']);
-            $props_t=$this->accessProtected($props_q['model'],['table','primaryKey']);
-
-            return $query->$join($props_t['table'].' as '.$alias,$alias.'.'.$props_t['primaryKey'],'=',$this->table.'.'.$props['foreignKey']);
+            $reflect=$this->accessProtected($this->$relationship_name(),['foreignKey','ownerKey','related']);
+            $reflect_related=$this->accessProtected($reflect['related'],['table','primaryKey']);
+            return $query->$join($reflect_related['table'].' as '.$alias,$alias.'.'.$reflect['ownerKey'],'=',$this->table.'.'.$reflect['foreignKey']);
         }elseif(is_a($this->$relationship_name(),'Illuminate\Database\Eloquent\Relations\HasManyThrough')){
+            $reflect=$this->accessProtected($this->$relationship_name(),['firstKey','secondKey','localKey','throughParent','related']);
+            $reflect_related=$this->accessProtected($reflect['related'],['table']);
+            $reflect_through=$this->accessProtected($reflect['throughParent'],['table','primaryKey']);
+            $thisKey=$reflect['localKey'];
+            $throughKey=$reflect['firstKey'];
+            $throughPrimaryKey=$reflect_through['primaryKey'];
+            $relatedKey=$reflect['secondKey'];
+            $throughTable=$reflect_through['table'];
+            $relatedTable=$reflect_related['table'];
+            return $query->$join($throughTable,$throughTable.'.'.$throughKey,'=',$this->table.'.'.$thisKey)
+                         ->$join($relatedTable,$relatedTable.'.'.$relatedKey,'=',$throughTable.'.'.$throughPrimaryKey);
 
-            $props=$this->accessProtected($this->$relationship_name(),['localKey','secondKey','firstKey','query','parent']);
-            $props_q=$this->accessProtected($props['query'],['model']);
-            $props_par=$this->accessProtected($props['parent'],['table','primaryKey']);
-            $props_t=$this->accessProtected($props_q['model'],['table','primaryKey']);
-
-            return $query->$join($props_par['table'],$props_par['table'].'.'.$props['firstKey'],'=',$this->table.'.'.$props['localKey'])
-                ->$join($props_t['table'],$props_t['table'].'.'.$props_t['primaryKey'],'=',$props_par['table'].'.'.$props_t['primaryKey']);
         }
 
         return $query;
