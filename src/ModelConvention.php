@@ -105,16 +105,17 @@ trait ModelConvention
         return parent::hasOne($related, $foreignKey, $localKey);
     }
 
-
-    public function belongsToMany($related, $table = null, $foreignKey = null, $relatedKey = null, $relation = null)
+    public function belongsToMany($related, $table = null, $foreignPivotKey = null, $relatedPivotKey = null,
+                                  $parentKey = null, $relatedKey = null, $relation = null)
     {
+
         $related=$this->parseRelated($related);
-        if($foreignKey==null){
-            $foreignKey=$this->primaryKey;
+        if($foreignPivotKey==null){
+            $foreignPivotKey=$this->primaryKey;
         }
 
-        if($relatedKey==null) {
-            $relatedKey = $this->primaryKey($related);
+        if($relatedPivotKey==null) {
+            $relatedPivotKey = $this->primaryKey($related);
         }
         // If no relationship name was passed, we will pull backtraces to get the
         // name of the calling function. We will use that function name as the
@@ -128,9 +129,9 @@ trait ModelConvention
         // instances as well as the relationship instances we need for this.
         $instance = $this->newRelatedInstance($related);
 
-        $foreignKey = $foreignKey ?: $this->getForeignKey();
+        $foreignPivotKey = $foreignPivotKey ?: $this->getForeignKey();
 
-        $relatedKey = $relatedKey ?: $instance->getForeignKey();
+        $relatedPivotKey = $relatedPivotKey ?: $instance->getForeignKey();
 
         // If no table name was provided, we can guess it by concatenating the two
         // models using underscores in alphabetical order. The two model names
@@ -140,13 +141,14 @@ trait ModelConvention
         }
 
         return new BelongsToMany(
-            $instance->newQuery(), $this, $table, $foreignKey, $relatedKey, $relation
+            $instance->newQuery(), $this, $table, $foreignPivotKey,
+            $relatedPivotKey, $parentKey ?: $this->getKeyName(),
+            $relatedKey ?: $instance->getKeyName(), $relation
         );
     }
 
 
-
-    public function hasManyThrough($related, $through, $firstKey = null, $secondKey = null, $localKey = null)
+    public function hasManyThrough($related, $through, $firstKey = null, $secondKey = null, $localKey = null, $secondLocalKey = null)
     {
         $related=$this->parseRelated($related);
         $through=$this->parseRelated($through);
@@ -158,7 +160,7 @@ trait ModelConvention
 
         if($localKey==null)
             $localKey=$this->primaryKey;
-        return parent::hasManyThrough($related, $through, $firstKey, $secondKey, $localKey);
+        return parent::hasManyThrough($related, $through, $firstKey, $secondKey, $localKey,$secondLocalKey);
     }
 
     function allWithHas($relationship_name,$addQuery=null,$pivotCols=[],$withTrashed=false){
