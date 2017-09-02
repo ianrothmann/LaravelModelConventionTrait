@@ -1,7 +1,6 @@
 {
     "name": "ianrothmann/laravel-model-convention",
     "description": "A Model Trait to override standard laravel 5 model conventions for use with larger scale databases",
-    "version": "0.7.0",
 	"type": "library",
     "license": "Apache2",
     "authors": [
