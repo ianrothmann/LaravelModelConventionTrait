@@ -43,6 +43,8 @@ trait ModelConvention
 
         //if(!class_exists($related)){
         $app=$this->getAppNamespace();
+        if(strpos($related,$app)!==FALSE)
+            return $related;
 
         if(!class_exists($app.'Models\\'.$related)){
 
