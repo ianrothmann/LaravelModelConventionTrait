@@ -222,7 +222,7 @@ trait ModelConvention
             $join='rightJoin';
 
         if(is_a($this->$relationship_name(),'Illuminate\Database\Eloquent\Relations\BelongsToMany')){
-            $reflect=$this->accessProtected($this->$relationship_name(),['table','foreignKey','relatedKey','related','parent']);
+            $reflect=$this->accessProtected($this->$relationship_name(),['table','foreignPivotKey','parentKey','relatedKey','related','parent']);
             $reflect_related=$this->accessProtected($reflect['related'],['table']);
             $reflect_this=$this->accessProtected($reflect['parent'],['table']);
 
@@ -230,10 +230,11 @@ trait ModelConvention
             $relatedTable=$reflect_related['table'];
             $relatedKey=$reflect['relatedKey'];
             $thisTable=$reflect_this['table'];
-            $foreignKey=$reflect['foreignKey'];
+            $foreignPivotKey=$reflect['foreignPivotKey'];
+            $parentKey=$reflect['parentKey'];
 
-            return $query->$join($pivotTable,$thisTable.'.'.$foreignKey,'=',$pivotTable.'.'.$foreignKey)
-                         ->$join($relatedTable,$relatedTable.'.'.$relatedKey,'=',$pivotTable.'.'.$relatedKey);
+            return $query->$join($pivotTable,$thisTable.'.'.$parentKey,'=',$pivotTable.'.'.$foreignPivotKey)
+                ->$join($relatedTable,$relatedTable.'.'.$relatedKey,'=',$pivotTable.'.'.$relatedKey);
 
         }elseif(is_a($this->$relationship_name(),'Illuminate\Database\Eloquent\Relations\HasMany')){
             $alias=strtolower($relationship_name);
@@ -253,6 +254,7 @@ trait ModelConvention
 
         }elseif(is_a($this->$relationship_name(),'Illuminate\Database\Eloquent\Relations\BelongsTo')){
             $alias=strtolower($relationship_name);
+
             $reflect=$this->accessProtected($this->$relationship_name(),['foreignKey','ownerKey','related']);
             $reflect_related=$this->accessProtected($reflect['related'],['table','primaryKey']);
             return $query->$join($reflect_related['table'].' as '.$alias,$alias.'.'.$reflect['ownerKey'],'=',$this->table.'.'.$reflect['foreignKey']);
@@ -267,7 +269,7 @@ trait ModelConvention
             $throughTable=$reflect_through['table'];
             $relatedTable=$reflect_related['table'];
             return $query->$join($throughTable,$throughTable.'.'.$throughKey,'=',$this->table.'.'.$thisKey)
-                         ->$join($relatedTable,$relatedTable.'.'.$relatedKey,'=',$throughTable.'.'.$throughPrimaryKey);
+                ->$join($relatedTable,$relatedTable.'.'.$relatedKey,'=',$throughTable.'.'.$throughPrimaryKey);
 
         }
 
