@@ -40,23 +40,19 @@ trait ModelConvention
     }
 
     private function parseRelated($related){
+        if(!class_exists($related)){
+            $app=$this->getAppNamespace();
+            if(strpos($related,$app)!==FALSE)
+                return $related;
 
-        //if(!class_exists($related)){
-        $app=$this->getAppNamespace();
-        if(strpos($related,$app)!==FALSE)
-            return $related;
-
-        if(!class_exists($app.'Models\\'.$related)){
-
-            return $app.$related;
+            if(!class_exists($app.'Models\\'.$related)){
+                return $app.$related;
+            }else{
+                return $app.'Models\\'.$related;
+            }
         }else{
-
-            return $app.'Models\\'.$related;
-        }
-        /*  }else{
-
               return $related;
-          }*/
+        }
     }
 
     /**
