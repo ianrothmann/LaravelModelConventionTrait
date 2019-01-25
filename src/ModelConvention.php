@@ -52,7 +52,6 @@ trait ModelConvention
                 return $app.'Models\\'.$related;
             }
         }else{
-            die($related);
               return $related;
         }
     }
