@@ -78,6 +78,14 @@ trait ModelConvention
         return parent::belongsTo($related, $foreignKey, $otherKey, $relation);
     }
 
+    /**
+     * Define a one-to-many relationship.
+     *
+     * @param  string  $related
+     * @param  string  $foreignKey
+     * @param  string  $localKey
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function hasMany($related, $foreignKey = null, $localKey = null)
     {
         $related=$this->parseRelated($related);
@@ -91,6 +99,14 @@ trait ModelConvention
         return parent::hasMany($related, $foreignKey, $localKey);
     }
 
+    /**
+     * Define a one-to-one relationship.
+     *
+     * @param  string  $related
+     * @param  string  $foreignKey
+     * @param  string  $localKey
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
     public function hasOne($related, $foreignKey = null, $localKey = null)
     {
         $related=$this->parseRelated($related);
@@ -104,6 +120,18 @@ trait ModelConvention
         return parent::hasOne($related, $foreignKey, $localKey);
     }
 
+    /**
+     * Define a many-to-many relationship.
+     *
+     * @param  string  $related
+     * @param  string  $table
+     * @param  string  $foreignPivotKey
+     * @param  string  $relatedPivotKey
+     * @param  string  $parentKey
+     * @param  string  $relatedKey
+     * @param  string  $relation
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
     public function belongsToMany($related, $table = null, $foreignPivotKey = null, $relatedPivotKey = null,
                                   $parentKey = null, $relatedKey = null, $relation = null)
     {
@@ -147,6 +175,17 @@ trait ModelConvention
     }
 
 
+    /**
+     * Define a has-many-through relationship.
+     *
+     * @param  string  $related
+     * @param  string  $through
+     * @param  string|null  $firstKey
+     * @param  string|null  $secondKey
+     * @param  string|null  $localKey
+     * @param  string|null  $secondLocalKey
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
     public function hasManyThrough($related, $through, $firstKey = null, $secondKey = null, $localKey = null, $secondLocalKey = null)
     {
         $related=$this->parseRelated($related);
