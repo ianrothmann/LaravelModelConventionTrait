@@ -4,6 +4,7 @@ namespace IanRothmann\Database\Eloquent;
 
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\DB;
+use DateTimeInterface;
 
 /**
  * Focus\ModelConvention
@@ -324,5 +325,16 @@ trait ModelConvention
         }
 
         return $result;
+    }
+
+    /**
+     * Prepare a date for array / JSON serialization.
+     *
+     * @param  \DateTimeInterface  $date
+     * @return string
+     */
+    protected function serializeDate(DateTimeInterface $date)
+    {
+        return $date->format('Y-m-d H:i:s');
     }
 }
